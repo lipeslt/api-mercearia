@@ -1,4 +1,4 @@
-# 🛒 API E-commerce Mercearia (Zaflas)
+# 🛒 API E-commerce Mercearia
 
 Um backend robusto, seguro e escalável para e-commerce, desenvolvido com **Java e Spring Boot**. Este projeto implementa boas práticas de mercado, incluindo segurança avançada com JWT, uso de UUIDs para chaves primárias e transações seguras de banco de dados.
 
