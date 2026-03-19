@@ -18,32 +18,103 @@ public class TokenService {
     private String secretKey;
 
     @Value("${api.security.token.expiration}")
-    private long expirationTime;
+    private long accessTokenExpiration; // 1 hora em ms
 
-    public String gerarToken(Usuario usuario) {
+    @Value("${api.security.refresh-token.expiration:604800000}") // 7 dias por padrão
+    private long refreshTokenExpiration;
+
+    /**
+     * Gera um Access Token com duração curta (1 hora)
+     */
+    public String gerarAccessToken(Usuario usuario) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secretKey);
-            String token = JWT.create()
+            return JWT.create()
                     .withIssuer("ecommerce-mercearia")
                     .withSubject(usuario.getEmail())
                     .withClaim("id", usuario.getId())
                     .withClaim("nome", usuario.getNome())
-                    .withExpiresAt(gerarDataExpiracao())
+                    .withClaim("tipo", "ACCESS")
+                    .withExpiresAt(gerarDataExpiracao(accessTokenExpiration))
                     .sign(algorithm);
-            return token;
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Erro ao gerar token JWT", e);
+            throw new RuntimeException("Erro ao gerar Access Token JWT", e);
         }
     }
 
+    /**
+     * Gera um Refresh Token com duração longa (7 dias)
+     */
+    public String gerarRefreshToken(Usuario usuario) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secretKey);
+            return JWT.create()
+                    .withIssuer("ecommerce-mercearia")
+                    .withSubject(usuario.getEmail())
+                    .withClaim("id", usuario.getId())
+                    .withClaim("tipo", "REFRESH")
+                    .withExpiresAt(gerarDataExpiracao(refreshTokenExpiration))
+                    .sign(algorithm);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Erro ao gerar Refresh Token JWT", e);
+        }
+    }
+
+    /**
+     * Valida um Access Token e retorna o email do usuário
+     */
     public String validarToken(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secretKey);
-            return JWT.require(algorithm)
+            String email = JWT.require(algorithm)
                     .withIssuer("ecommerce-mercearia")
                     .build()
                     .verify(token)
                     .getSubject();
+
+            // Verificar se é um Access Token
+            String tipo = JWT.require(algorithm)
+                    .withIssuer("ecommerce-mercearia")
+                    .build()
+                    .verify(token)
+                    .getClaim("tipo")
+                    .asString();
+
+            if (!"ACCESS".equals(tipo)) {
+                return "";
+            }
+
+            return email;
+        } catch (JWTVerificationException exception) {
+            return "";
+        }
+    }
+
+    /**
+     * Valida um Refresh Token e retorna o email do usuário
+     */
+    public String validarRefreshToken(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secretKey);
+            String email = JWT.require(algorithm)
+                    .withIssuer("ecommerce-mercearia")
+                    .build()
+                    .verify(token)
+                    .getSubject();
+
+            // Verificar se é um Refresh Token
+            String tipo = JWT.require(algorithm)
+                    .withIssuer("ecommerce-mercearia")
+                    .build()
+                    .verify(token)
+                    .getClaim("tipo")
+                    .asString();
+
+            if (!"REFRESH".equals(tipo)) {
+                return "";
+            }
+
+            return email;
         } catch (JWTVerificationException exception) {
             return "";
         }
@@ -53,9 +124,9 @@ public class TokenService {
         return validarToken(token);
     }
 
-    private Instant gerarDataExpiracao() {
+    private Instant gerarDataExpiracao(long expiracaoEm) {
         return LocalDateTime.now()
-                .plusSeconds(expirationTime / 1000)
+                .plusNanos(expiracaoEm * 1_000_000L)
                 .atZone(ZoneId.systemDefault())
                 .toInstant();
     }
