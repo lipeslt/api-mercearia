@@ -1,26 +1,25 @@
 package com.exampbr.com.felipe.ecommerce_mercearia.dtos;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
-
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
-import java.util.UUID;
 
 public record ProdutoRequestDTO(
-        @NotBlank(message = "O nome do produto é obrigatório")
+        @NotBlank(message = "Nome é obrigatório")
+        @Size(min = 3, max = 150, message = "Nome deve ter entre 3 e 150 caracteres")
         String nome,
 
-        @NotNull(message = "O preço é obrigatório")
-        @Positive(message = "O preço deve ser maior que zero")
+        @Size(max = 1000, message = "Descrição deve ter no máximo 1000 caracteres")
+        String descricao,
+
+        @NotNull(message = "Preço é obrigatório")
+        @DecimalMin(value = "0.01", message = "Preço deve ser maior que 0")
         BigDecimal preco,
 
-        @NotNull(message = "A quantidade em estoque é obrigatória")
-        @PositiveOrZero(message = "O estoque não pode ser negativo")
+        @NotNull(message = "Estoque é obrigatório")
+        @PositiveOrZero(message = "Estoque não pode ser negativo")
         Integer estoque,
 
-        @NotNull(message = "O ID da categoria é obrigatório")
-        UUID categoriaId
-) {
-}
+        @NotNull(message = "ID da categoria é obrigatório")
+        @Positive(message = "ID da categoria deve ser positivo")
+        Long categoriaId
+) {}

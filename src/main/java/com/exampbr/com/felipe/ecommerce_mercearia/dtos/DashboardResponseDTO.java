@@ -4,6 +4,5 @@ import java.math.BigDecimal;
 
 public record DashboardResponseDTO(
         BigDecimal faturamentoTotal,
-        Long quantidadeVendas
-) {
-}
+        Long totalPedidos
+) {}

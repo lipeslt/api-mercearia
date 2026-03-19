@@ -1,12 +1,12 @@
 package com.exampbr.com.felipe.ecommerce_mercearia.dtos;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
-import java.util.List;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 public record PedidoRequestDTO(
-        @NotEmpty(message = "O pedido deve conter pelo menos um item")
-        @Valid // Valida a lista de itens internamente
-        List<ItemPedidoRequestDTO> itens
-) {
-}
+        @NotNull(message = "ID do usuário é obrigatório")
+        @Positive(message = "ID do usuário deve ser positivo")
+        Long usuarioId,
+
+        String status
+) {}

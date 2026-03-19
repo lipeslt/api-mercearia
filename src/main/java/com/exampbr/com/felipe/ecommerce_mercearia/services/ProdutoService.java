@@ -1,6 +1,5 @@
 package com.exampbr.com.felipe.ecommerce_mercearia.services;
 
-import com.exampbr.com.felipe.ecommerce_mercearia.dtos.CategoriaResponseDTO;
 import com.exampbr.com.felipe.ecommerce_mercearia.dtos.ProdutoRequestDTO;
 import com.exampbr.com.felipe.ecommerce_mercearia.dtos.ProdutoResponseDTO;
 import com.exampbr.com.felipe.ecommerce_mercearia.models.Categoria;
@@ -8,63 +7,94 @@ import com.exampbr.com.felipe.ecommerce_mercearia.models.Produto;
 import com.exampbr.com.felipe.ecommerce_mercearia.repositories.CategoriaRepository;
 import com.exampbr.com.felipe.ecommerce_mercearia.repositories.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ProdutoService {
 
-    private final ProdutoRepository produtoRepository;
-    private final CategoriaRepository categoriaRepository;
+    @Autowired
+    private ProdutoRepository produtoRepository;
 
-    public ProdutoService(ProdutoRepository produtoRepository, CategoriaRepository categoriaRepository) {
-        this.produtoRepository = produtoRepository;
-        this.categoriaRepository = categoriaRepository;
+    @Autowired
+    private CategoriaRepository categoriaRepository;
+
+    @Cacheable("produtos")
+    public Page<ProdutoResponseDTO> listar(Pageable pageable) {
+        return produtoRepository.findAll(pageable)
+                .map(this::convertToResponseDTO);
     }
 
+    @Cacheable(value = "produto", key = "#id")
+    public ProdutoResponseDTO buscarPorId(Long id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
+        return convertToResponseDTO(produto);
+    }
+
+    @Cacheable(value = "produtosPorCategoria", key = "#categoriaId")
+    public Page<ProdutoResponseDTO> buscarPorCategoria(Long categoriaId, Pageable pageable) {
+        return produtoRepository.findByCategoriaId(categoriaId, pageable)
+                .map(this::convertToResponseDTO);
+    }
+
+    @CacheEvict(value = {"produtos", "produto", "produtosPorCategoria"}, allEntries = true)
     @Transactional
-    public ProdutoResponseDTO salvar(ProdutoRequestDTO dto) {
+    public ProdutoResponseDTO criar(ProdutoRequestDTO dto) {
         Categoria categoria = categoriaRepository.findById(dto.categoriaId())
-                .orElseThrow(() -> new EntityNotFoundException("Categoria não encontrada com o ID: " + dto.categoriaId()));
+                .orElseThrow(() -> new EntityNotFoundException("Categoria não encontrada"));
+
         Produto produto = new Produto();
         produto.setNome(dto.nome());
+        produto.setDescricao(dto.descricao());
         produto.setPreco(dto.preco());
         produto.setEstoque(dto.estoque());
-        produto.setCategoria(categoria); // Faz o vínculo (Relacionamento)
-        produto = produtoRepository.save(produto);
-        return toDTO(produto);
+        produto.setCategoria(categoria);
+
+        return convertToResponseDTO(produtoRepository.save(produto));
     }
 
-    @Transactional(readOnly = true)
-    public List<ProdutoResponseDTO> listarTodos() {
-        return produtoRepository.findAll().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public ProdutoResponseDTO buscarPorId(UUID id) {
+    @CacheEvict(value = {"produtos", "produto", "produtosPorCategoria"}, allEntries = true)
+    @Transactional
+    public ProdutoResponseDTO atualizar(Long id, ProdutoRequestDTO dto) {
         Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado com o ID: " + id));
-        return toDTO(produto);
-    }
-    private ProdutoResponseDTO toDTO(Produto produto) {
-        CategoriaResponseDTO categoriaDTO = new CategoriaResponseDTO(
-                produto.getCategoria().getId(),
-                produto.getCategoria().getNome(),
-                produto.getCategoria().getDescricao()
-        );
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
 
+        Categoria categoria = categoriaRepository.findById(dto.categoriaId())
+                .orElseThrow(() -> new EntityNotFoundException("Categoria não encontrada"));
+
+        produto.setNome(dto.nome());
+        produto.setDescricao(dto.descricao());
+        produto.setPreco(dto.preco());
+        produto.setEstoque(dto.estoque());
+        produto.setCategoria(categoria);
+
+        return convertToResponseDTO(produtoRepository.save(produto));
+    }
+
+    @CacheEvict(value = {"produtos", "produto", "produtosPorCategoria"}, allEntries = true)
+    @Transactional
+    public void deletar(Long id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
+        produtoRepository.delete(produto);
+    }
+
+    private ProdutoResponseDTO convertToResponseDTO(Produto produto) {
         return new ProdutoResponseDTO(
                 produto.getId(),
                 produto.getNome(),
+                produto.getDescricao(),
                 produto.getPreco(),
                 produto.getEstoque(),
-                categoriaDTO
+                produto.getCategoria().getId(),
+                produto.getCreatedAt(),
+                produto.getUpdatedAt()
         );
     }
 }

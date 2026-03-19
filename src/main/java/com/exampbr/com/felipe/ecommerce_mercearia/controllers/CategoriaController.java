@@ -1,37 +1,61 @@
 package com.exampbr.com.felipe.ecommerce_mercearia.controllers;
 
 import com.exampbr.com.felipe.ecommerce_mercearia.dtos.CategoriaRequestDTO;
-import com.exampbr.com.felipe.ecommerce_mercearia.dtos.CategoriaResponseDTO;
+import com.exampbr.com.felipe.ecommerce_mercearia.models.Categoria;
 import com.exampbr.com.felipe.ecommerce_mercearia.services.CategoriaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.UUID;
-
 @RestController
-@RequestMapping("/api/categorias") // Define a rota base para este controller
+@RequestMapping("/api/categorias")
+@Tag(name = "Categorias", description = "Endpoints para gerenciamento de categorias")
 public class CategoriaController {
 
-    private final CategoriaService service;
+    @Autowired
+    private CategoriaService categoriaService;
 
-    public CategoriaController(CategoriaService service) {
-        this.service = service;
+    @GetMapping
+    @Operation(summary = "Listar categorias", description = "Retorna uma lista paginada de categorias")
+    public ResponseEntity<Page<Categoria>> listar(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nome") String sortBy,
+            @RequestParam(defaultValue = "ASC") Sort.Direction direction) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        return ResponseEntity.ok(categoriaService.listar(pageable));
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Buscar categoria por ID", description = "Retorna uma categoria específica")
+    public ResponseEntity<Categoria> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(categoriaService.buscarPorId(id));
     }
 
     @PostMapping
-    public ResponseEntity<CategoriaResponseDTO> criar(@Valid @RequestBody CategoriaRequestDTO dto) {
-        CategoriaResponseDTO response = service.salvar(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @Operation(summary = "Criar categoria", description = "Cria uma nova categoria")
+    public ResponseEntity<Categoria> criar(@Valid @RequestBody CategoriaRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.criar(dto));
     }
-    @GetMapping
-    public ResponseEntity<List<CategoriaResponseDTO>> listar() {
-        return ResponseEntity.ok(service.listarTodas());
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar categoria", description = "Atualiza uma categoria existente")
+    public ResponseEntity<Categoria> atualizar(@PathVariable Long id, @Valid @RequestBody CategoriaRequestDTO dto) {
+        return ResponseEntity.ok(categoriaService.atualizar(id, dto));
     }
-    @GetMapping("/{id}")
-    public ResponseEntity<CategoriaResponseDTO> buscarPorId(@PathVariable UUID id) {
-        return ResponseEntity.ok(service.buscarPorId(id));
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Deletar categoria", description = "Deleta uma categoria existente")
+    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        categoriaService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 }

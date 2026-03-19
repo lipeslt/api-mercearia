@@ -1,43 +1,32 @@
 package com.exampbr.com.felipe.ecommerce_mercearia.models;
 
-import com.exampbr.com.felipe.ecommerce_mercearia.enums.StatusPedido;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tb_pedidos")
+@Table(name = "pedido")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of = "id")
-public class Pedido {
+public class Pedido extends AuditableEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(nullable = false)
-    private Instant dataCriacao; // Usa o padrão UTC do Java para datas
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private StatusPedido status;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal valorTotal;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ItemPedido> itens = new ArrayList<>();
+    @Column(nullable = false)
+    private String status;
 
+    @Column(name = "data_pedido")
+    private LocalDateTime dataPedido;
 }

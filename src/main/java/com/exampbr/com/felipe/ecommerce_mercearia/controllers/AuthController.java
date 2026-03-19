@@ -1,58 +1,79 @@
 package com.exampbr.com.felipe.ecommerce_mercearia.controllers;
 
 import com.exampbr.com.felipe.ecommerce_mercearia.dtos.AuthenticationDTO;
-import com.exampbr.com.felipe.ecommerce_mercearia.dtos.LoginResponseDTO;
 import com.exampbr.com.felipe.ecommerce_mercearia.dtos.RegisterDTO;
 import com.exampbr.com.felipe.ecommerce_mercearia.models.Usuario;
 import com.exampbr.com.felipe.ecommerce_mercearia.repositories.UsuarioRepository;
 import com.exampbr.com.felipe.ecommerce_mercearia.services.TokenService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Autenticação", description = "Endpoints para login e registro")
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final UsuarioRepository repository;
-    private final TokenService tokenService;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
-    public AuthController(AuthenticationManager authenticationManager, UsuarioRepository repository, TokenService tokenService) {
-        this.authenticationManager = authenticationManager;
-        this.repository = repository;
-        this.tokenService = tokenService;
-    }
+    @Autowired
+    private TokenService tokenService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid AuthenticationDTO data) {
-        var usernamePassword = new UsernamePasswordAuthenticationToken(data.email(), data.senha());
-        var auth = this.authenticationManager.authenticate(usernamePassword);
-        var token = tokenService.gerarToken((Usuario) auth.getPrincipal());
+    @Operation(summary = "Login de usuário", description = "Realiza login e retorna JWT token")
+    public ResponseEntity<?> login(@Valid @RequestBody AuthenticationDTO data) {
+        var usuario = usuarioRepository.findByEmail(data.email());
 
-        return ResponseEntity.ok(new LoginResponseDTO(token));
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Email ou senha inválidos");
+        }
+
+        if (!passwordEncoder.matches(data.senha(), usuario.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Email ou senha inválidos");
+        }
+
+        var token = tokenService.gerarToken(usuario);
+        return ResponseEntity.ok(new TokenResponseDTO(token, "Bearer"));
     }
 
     @PostMapping("/registrar")
-    public ResponseEntity<Void> registrar(@RequestBody @Valid RegisterDTO data) {
-        if (this.repository.findByEmail(data.email()) != null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    @Operation(summary = "Registrar novo usuário", description = "Cria um novo usuário")
+    public ResponseEntity<?> registrar(@Valid @RequestBody RegisterDTO data) {
+        if (usuarioRepository.findByEmail(data.email()) != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Email já cadastrado");
         }
-        String senhaCriptografada = new BCryptPasswordEncoder().encode(data.senha());
+
         Usuario novoUsuario = new Usuario();
         novoUsuario.setNome(data.nome());
         novoUsuario.setEmail(data.email());
-        novoUsuario.setSenha(senhaCriptografada);
-        novoUsuario.setFotoPerfil(data.fotoPerfil());
-        novoUsuario.setRole(data.role());
-        this.repository.save(novoUsuario);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        novoUsuario.setSenha(passwordEncoder.encode(data.senha()));
+        novoUsuario.setAtivo(true);
+
+        usuarioRepository.save(novoUsuario);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Usuário registrado com sucesso");
+    }
+
+    public static class TokenResponseDTO {
+        public String token;
+        public String type;
+
+        public TokenResponseDTO(String token, String type) {
+            this.token = token;
+            this.type = type;
+        }
     }
 }

@@ -1,32 +1,26 @@
 package com.exampbr.com.felipe.ecommerce_mercearia.models;
 
 import jakarta.persistence.*;
-import lombok.*;
-
-import java.util.List;
-import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
-@Table(name = "tb_categorias")
+@Table(name = "categoria")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of = "id")
-public class Categoria {
+public class Categoria extends AuditableEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false)
     private String nome;
 
     @Column(columnDefinition = "TEXT")
     private String descricao;
-
-    // Uma categoria pode ter vários produtos
-    // O fetch LAZY garante que não vamos carregar todos os produtos do banco à toa
-    @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Produto> produtos;
 }

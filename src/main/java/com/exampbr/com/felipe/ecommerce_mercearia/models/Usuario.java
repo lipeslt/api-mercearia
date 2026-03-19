@@ -1,61 +1,43 @@
 package com.exampbr.com.felipe.ecommerce_mercearia.models;
 
-import com.exampbr.com.felipe.ecommerce_mercearia.enums.Role;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
-@Table(name = "tb_usuarios")
+@Table(name = "usuario")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of = "id")
-public class Usuario implements UserDetails {
+public class Usuario extends AuditableEntity implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String nome;
 
     @Column(nullable = false, unique = true)
-    private String email; // O email será o nosso "username" no login
+    private String email;
 
     @Column(nullable = false)
     private String senha;
 
-    @Column(length = 500)
-    private String fotoPerfil; // URL da imagem (pode vir de um bucket S3 da AWS, por exemplo)
-
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
-
-    // Relacionamento: Um usuário pode ter vários pedidos (Lista de Compras/Histórico)
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Pedido> pedidos;
-
-    // =========================================================================
-    // MÉTODOS OBRIGATÓRIOS DA INTERFACE USERDETAILS (SPRING SECURITY)
-    // =========================================================================
+    private Boolean ativo = true;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Diz ao Spring qual é o nível de acesso deste usuário
-        if (this.role == Role.ADMIN) {
-            return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_CLIENTE"));
-        } else {
-            return List.of(new SimpleGrantedAuthority("ROLE_CLIENTE"));
-        }
+        return List.of();
     }
 
     @Override
@@ -65,26 +47,26 @@ public class Usuario implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.email; // Usei o email como identificador de login
+        return this.email;
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Conta não expira
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Conta não bloqueia
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Credenciais não expiram
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return true; // Conta está ativa
+        return this.ativo;
     }
 }

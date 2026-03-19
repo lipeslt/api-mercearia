@@ -2,10 +2,13 @@ package com.exampbr.com.felipe.ecommerce_mercearia.config;
 
 import com.exampbr.com.felipe.ecommerce_mercearia.repositories.UsuarioRepository;
 import com.exampbr.com.felipe.ecommerce_mercearia.services.TokenService;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +20,7 @@ import java.io.IOException;
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(SecurityFilter.class);
     private final TokenService tokenService;
     private final UsuarioRepository usuarioRepository;
 
@@ -27,24 +31,58 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        var token = this.recuperarToken(request);
+        String requestUri = request.getRequestURI();
 
-        if (token != null) {
-            var email = tokenService.validarToken(token);
-
-            if (!email.isEmpty()) {
-                UserDetails usuario = usuarioRepository.findByEmail(email);
-
-                // Monta o objeto de autenticação do Spring Security
-                var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
-
-                // Salva o usuario logado no contexto da requisição atual
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            // ===== IGNORAR ROTAS PÚBLICAS =====
+            if (requestUri.startsWith("/api/auth/") ||
+                    requestUri.startsWith("/swagger-ui") ||
+                    requestUri.startsWith("/v3/api-docs") ||
+                    requestUri.startsWith("/api-docs") ||
+                    requestUri.startsWith("/webjars") ||
+                    requestUri.startsWith("/actuator") ||
+                    requestUri.equals("/health")) {
+                logger.debug("Rota pública acessada: {}", requestUri);
+                filterChain.doFilter(request, response);
+                return;
             }
-        }
 
-        // Segue o fluxo da requisição (vai para os Controllers)
-        filterChain.doFilter(request, response);
+            // ===== PROCESSAR TOKEN PARA ROTAS PROTEGIDAS =====
+            var token = this.recuperarToken(request);
+
+            if (token != null) {
+                var email = tokenService.validarToken(token);
+
+                if (!email.isEmpty()) {
+                    UserDetails usuario = usuarioRepository.findByEmail(email);
+
+                    if (usuario != null) {
+                        // Monta o objeto de autenticação do Spring Security
+                        var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
+
+                        // Salva o usuario logado no contexto da requisição atual
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        logger.info("Usuário autenticado: {}", email);
+                    } else {
+                        logger.warn("Usuário não encontrado no banco: {}", email);
+                    }
+                } else {
+                    logger.warn("Token inválido, vazio ou expirado");
+                }
+            }
+
+            // Segue o fluxo da requisição (vai para os Controllers)
+            filterChain.doFilter(request, response);
+
+        } catch (JWTVerificationException exception) {
+            logger.error("Erro ao verificar JWT: {}", exception.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\": \"Token inválido ou expirado\"}");
+        } catch (Exception exception) {
+            logger.error("Erro inesperado no SecurityFilter: {}", exception.getMessage(), exception);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("{\"error\": \"Erro ao processar requisição\"}");
+        }
     }
 
     private String recuperarToken(HttpServletRequest request) {

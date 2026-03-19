@@ -1,13 +1,15 @@
 package com.exampbr.com.felipe.ecommerce_mercearia.dtos;
 
 import java.math.BigDecimal;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 public record ProdutoResponseDTO(
-        UUID id,
+        Long id,
         String nome,
+        String descricao,
         BigDecimal preco,
         Integer estoque,
-        CategoriaResponseDTO categoria // Devolvemos os dados da categoria junto
-) {
-}
+        Long categoriaId,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
+) {}
