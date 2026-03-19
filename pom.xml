@@ -19,12 +19,6 @@
     </properties>
     <dependencies>
 
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <!-- Spring Boot Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -134,7 +128,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- H2 Database (for testing) -->
+        <!-- H2 Database (for testing) - ÚNICO -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
