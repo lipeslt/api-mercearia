@@ -34,7 +34,6 @@ public class SecurityFilter extends OncePerRequestFilter {
         String requestUri = request.getRequestURI();
 
         try {
-            // ===== IGNORAR ROTAS PÚBLICAS =====
             if (requestUri.startsWith("/api/auth/") ||
                     requestUri.startsWith("/swagger-ui") ||
                     requestUri.startsWith("/v3/api-docs") ||
@@ -46,8 +45,6 @@ public class SecurityFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
-
-            // ===== PROCESSAR TOKEN PARA ROTAS PROTEGIDAS =====
             var token = this.recuperarToken(request);
 
             if (token != null) {
@@ -57,10 +54,7 @@ public class SecurityFilter extends OncePerRequestFilter {
                     UserDetails usuario = usuarioRepository.findByEmail(email);
 
                     if (usuario != null) {
-                        // Monta o objeto de autenticação do Spring Security
                         var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
-
-                        // Salva o usuario logado no contexto da requisição atual
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                         logger.info("Usuário autenticado: {}", email);
                     } else {
@@ -70,8 +64,6 @@ public class SecurityFilter extends OncePerRequestFilter {
                     logger.warn("Token inválido, vazio ou expirado");
                 }
             }
-
-            // Segue o fluxo da requisição (vai para os Controllers)
             filterChain.doFilter(request, response);
 
         } catch (JWTVerificationException exception) {

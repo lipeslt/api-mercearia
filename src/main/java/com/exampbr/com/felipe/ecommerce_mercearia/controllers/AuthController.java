@@ -98,8 +98,6 @@ public class AuthController {
                             "Verifique suas credenciais e tente novamente"
                     ));
         }
-
-        // Login bem-sucedido - limpar tentativas
         tentativaLoginRepository.findByEmail(data.email()).ifPresent(tentativa -> {
             tentativa.setTentativas(0);
             tentativa.setBloqueado(false);
@@ -107,7 +105,6 @@ public class AuthController {
             tentativaLoginRepository.save(tentativa);
         });
 
-        // Gerar tokens
         String accessToken = tokenService.gerarAccessToken(usuario);
         String refreshToken = tokenService.gerarRefreshToken(usuario);
 
@@ -171,7 +168,6 @@ public class AuthController {
     public ResponseEntity<?> registrar(@Valid @RequestBody RegisterDTO data) {
         logger.info("Tentativa de registro para email: {}", data.email());
 
-        // Validar se usuário já existe
         if (usuarioRepository.findByEmail(data.email()) != null) {
             logger.warn("Email já cadastrado: {}", data.email());
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -205,10 +201,6 @@ public class AuthController {
                         "Você pode fazer login agora"
                 ));
     }
-
-    /**
-     * Registra uma tentativa de login falhada
-     */
     private void registrarTentativaFalhada(String email) {
         Optional<TentativaLogin> tentativaOpt = tentativaLoginRepository.findByEmail(email);
 
@@ -221,10 +213,7 @@ public class AuthController {
             tentativa.setEmail(email);
             tentativa.setTentativas(1);
         }
-
         tentativa.setUltimaTentativa(LocalDateTime.now());
-
-        // Se atingir o máximo de tentativas, bloquear
         if (tentativa.getTentativas() >= MAX_TENTATIVAS) {
             tentativa.setBloqueado(true);
             tentativa.setDataBloqueio(LocalDateTime.now());
@@ -233,31 +222,23 @@ public class AuthController {
 
         tentativaLoginRepository.save(tentativa);
     }
-
-    /**
-     * Valida a força da senha
-     */
     private boolean validarSenhaForte(String senha) {
         // Mínimo 8 caracteres
         if (senha.length() < 8) {
             return false;
         }
-
         // Deve conter pelo menos uma letra maiúscula
         if (!senha.matches(".*[A-Z].*")) {
             return false;
         }
-
         // Deve conter pelo menos uma letra minúscula
         if (!senha.matches(".*[a-z].*")) {
             return false;
         }
-
         // Deve conter pelo menos um número
         if (!senha.matches(".*[0-9].*")) {
             return false;
         }
-
         // Deve conter pelo menos um caractere especial
         if (!senha.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) {
             return false;
@@ -265,8 +246,6 @@ public class AuthController {
 
         return true;
     }
-
-    // ===== DTOS INTERNOS =====
 
     public record LoginResponseDTO(
             String accessToken,

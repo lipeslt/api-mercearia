@@ -23,9 +23,6 @@ public class TokenService {
     @Value("${api.security.refresh-token.expiration:604800000}") // 7 dias por padrão
     private long refreshTokenExpiration;
 
-    /**
-     * Gera um Access Token com duração curta (1 hora)
-     */
     public String gerarAccessToken(Usuario usuario) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secretKey);
@@ -42,9 +39,6 @@ public class TokenService {
         }
     }
 
-    /**
-     * Gera um Refresh Token com duração longa (7 dias)
-     */
     public String gerarRefreshToken(Usuario usuario) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secretKey);
@@ -60,9 +54,6 @@ public class TokenService {
         }
     }
 
-    /**
-     * Valida um Access Token e retorna o email do usuário
-     */
     public String validarToken(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secretKey);
@@ -72,7 +63,7 @@ public class TokenService {
                     .verify(token)
                     .getSubject();
 
-            // Verificar se é um Access Token
+            // Verificar se é um access token
             String tipo = JWT.require(algorithm)
                     .withIssuer("ecommerce-mercearia")
                     .build()
@@ -90,9 +81,6 @@ public class TokenService {
         }
     }
 
-    /**
-     * Valida um Refresh Token e retorna o email do usuário
-     */
     public String validarRefreshToken(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secretKey);
@@ -102,7 +90,6 @@ public class TokenService {
                     .verify(token)
                     .getSubject();
 
-            // Verificar se é um Refresh Token
             String tipo = JWT.require(algorithm)
                     .withIssuer("ecommerce-mercearia")
                     .build()

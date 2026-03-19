@@ -35,35 +35,24 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        // ===== SWAGGER - Acesso público =====
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/v3/api-docs").permitAll()
                         .requestMatchers("/api-docs/**").permitAll()
                         .requestMatchers("/webjars/**").permitAll()
-
-                        // ===== Login - Acesso público =====
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/registrar").permitAll()
-
-                        // ===== Produtos e Categorias - Leitura pública =====
                         .requestMatchers(HttpMethod.GET, "/api/produtos").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/produtos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categorias").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
-
-                        // ===== Carrossel - Acesso público =====
                         .requestMatchers(HttpMethod.GET, "/api/carrossel").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/carrossel/**").permitAll()
-
-                        // ===== Health Check & Actuator =====
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/health").permitAll()
                         .requestMatchers("/health/**").permitAll()
-
-                        // ===== Tudo o resto requer autenticação =====
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
