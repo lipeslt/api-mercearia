@@ -5,51 +5,31 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "tb_itens_pedido")
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class ItemPedido {
+@NoArgsConstructor
+public class ItemPedido extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private java.util.UUID id;
 
-    @ManyToOne
+    @Column(name = "quantidade", nullable = false)
+    private Integer quantidade;
+
+    @Column(name = "preco_unitario", precision = 10, scale = 2, nullable = false)
+    private BigDecimal precoUnitario;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pedido_id", nullable = false)
     private Pedido pedido;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
-
-    @Column(nullable = false)
-    private Integer quantidade;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal precoUnitario;
-
-    @Column(name = "criado_em", nullable = false, updatable = false)
-    private OffsetDateTime criadoEm;
-
-    @Column(name = "atualizado_em", nullable = false)
-    private OffsetDateTime atualizadoEm;
-
-    @PrePersist
-    protected void onCreate() {
-        this.criadoEm = OffsetDateTime.now();
-        this.atualizadoEm = OffsetDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.atualizadoEm = OffsetDateTime.now();
-    }
 }

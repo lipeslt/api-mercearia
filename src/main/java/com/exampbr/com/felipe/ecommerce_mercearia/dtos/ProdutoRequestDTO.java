@@ -1,7 +1,9 @@
 package com.exampbr.com.felipe.ecommerce_mercearia.dtos;
 
 import jakarta.validation.constraints.*;
+
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public record ProdutoRequestDTO(
         @NotBlank(message = "Nome é obrigatório")
@@ -12,7 +14,7 @@ public record ProdutoRequestDTO(
         String descricao,
 
         @NotNull(message = "Preço é obrigatório")
-        @DecimalMin(value = "0.01", message = "Preço deve ser maior que 0")
+        @DecimalMin(value = "0.0", inclusive = false, message = "Preço deve ser maior que 0")
         BigDecimal preco,
 
         @NotNull(message = "Estoque é obrigatório")
@@ -20,6 +22,5 @@ public record ProdutoRequestDTO(
         Integer estoque,
 
         @NotNull(message = "ID da categoria é obrigatório")
-        @Positive(message = "ID da categoria deve ser positivo")
-        Long categoriaId
+        UUID categoriaId
 ) {}

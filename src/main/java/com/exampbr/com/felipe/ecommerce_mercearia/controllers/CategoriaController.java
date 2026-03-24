@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/categorias")
 @Tag(name = "Categorias", description = "Endpoints para gerenciamento de categorias")
@@ -24,7 +26,7 @@ public class CategoriaController {
     private CategoriaService categoriaService;
 
     @GetMapping
-    @Operation(summary = "Listar categorias", description = "Retorna uma lista paginada de categorias")
+    @Operation(summary = "Listar categorias", description = "Retorna uma lista paginada de categorias ativas")
     public ResponseEntity<Page<Categoria>> listar(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -35,8 +37,8 @@ public class CategoriaController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar categoria por ID", description = "Retorna uma categoria específica")
-    public ResponseEntity<Categoria> buscarPorId(@PathVariable Long id) {
+    @Operation(summary = "Buscar categoria por ID", description = "Retorna uma categoria específica (se ativa)")
+    public ResponseEntity<Categoria> buscarPorId(@PathVariable UUID id) {
         return ResponseEntity.ok(categoriaService.buscarPorId(id));
     }
 
@@ -48,13 +50,13 @@ public class CategoriaController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar categoria", description = "Atualiza uma categoria existente")
-    public ResponseEntity<Categoria> atualizar(@PathVariable Long id, @Valid @RequestBody CategoriaRequestDTO dto) {
+    public ResponseEntity<Categoria> atualizar(@PathVariable UUID id, @Valid @RequestBody CategoriaRequestDTO dto) {
         return ResponseEntity.ok(categoriaService.atualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Deletar categoria", description = "Deleta uma categoria existente")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+    @Operation(summary = "Deletar categoria (Soft Delete)", description = "Marca categoria como inativa")
+    public ResponseEntity<Void> deletar(@PathVariable UUID id) {
         categoriaService.deletar(id);
         return ResponseEntity.noContent().build();
     }

@@ -41,7 +41,8 @@ public class ProdutoService {
 
     @Cacheable(value = "produtosPorCategoria", key = "#categoriaId")
     public Page<ProdutoResponseDTO> buscarPorCategoria(UUID categoriaId, Pageable pageable) {
-        return produtoRepository.findByCategoriaId(categoriaId, pageable)
+        return produtoRepository.findAll(pageable)
+                .filter(p -> p.getCategoria().getId().equals(categoriaId))
                 .map(this::convertToResponseDTO);
     }
 

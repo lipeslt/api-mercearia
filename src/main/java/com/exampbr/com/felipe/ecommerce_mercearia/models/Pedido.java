@@ -5,56 +5,45 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.UUID;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_pedidos")
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class Pedido {
+@NoArgsConstructor
+public class Pedido extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private java.util.UUID id;
 
-    @ManyToOne
+    @Column(name = "data_criacao", nullable = false)
+    private OffsetDateTime dataCriacao;
+
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private StatusPedido status;
+
+    @Column(name = "valor_total", precision = 10, scale = 2, nullable = false)
+    private BigDecimal valorTotal;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    @Column(nullable = false)
-    private String status;
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItemPedido> itens;
 
-    @Column(name = "data_criacao")
-    private OffsetDateTime dataCriacao;
-
-    @Column(name = "valor_total")
-    private BigDecimal valorTotal;
-
-    @Column(name = "criado_em", nullable = false, updatable = false)
-    private OffsetDateTime criadoEm;
-
-    @Column(name = "atualizado_em", nullable = false)
-    private OffsetDateTime atualizadoEm;
-
-    @Column(name = "criado_por")
-    private UUID criadoPor;
-
-    @Column(name = "atualizado_por")
-    private UUID atualizadoPor;
-
-    @PrePersist
-    protected void onCreate() {
-        criadoEm = OffsetDateTime.now();
-        atualizadoEm = OffsetDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        atualizadoEm = OffsetDateTime.now();
+    public enum StatusPedido {
+        AGUARDANDO_PAGAMENTO,
+        PAGO,
+        SEPARACAO_ESTOQUE,
+        ENVIADO,
+        ENTREGUE,
+        CANCELADO
     }
 }

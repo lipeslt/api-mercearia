@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class CategoriaService {
 
@@ -20,12 +22,12 @@ public class CategoriaService {
 
     @Cacheable("categorias")
     public Page<Categoria> listar(Pageable pageable) {
-        return categoriaRepository.findAll(pageable);
+        return categoriaRepository.findAllAtivas(pageable);
     }
 
     @Cacheable(value = "categoria", key = "#id")
-    public Categoria buscarPorId(Long id) {
-        return categoriaRepository.findById(id)
+    public Categoria buscarPorId(UUID id) {
+        return categoriaRepository.findByIdAtivo(id)
                 .orElseThrow(() -> new EntityNotFoundException("Categoria não encontrada"));
     }
 
@@ -35,12 +37,13 @@ public class CategoriaService {
         Categoria categoria = new Categoria();
         categoria.setNome(dto.nome());
         categoria.setDescricao(dto.descricao());
+        categoria.setAtivo(true);
         return categoriaRepository.save(categoria);
     }
 
     @CacheEvict(value = {"categorias", "categoria"}, allEntries = true)
     @Transactional
-    public Categoria atualizar(Long id, CategoriaRequestDTO dto) {
+    public Categoria atualizar(UUID id, CategoriaRequestDTO dto) {
         Categoria categoria = buscarPorId(id);
         categoria.setNome(dto.nome());
         categoria.setDescricao(dto.descricao());
@@ -49,8 +52,10 @@ public class CategoriaService {
 
     @CacheEvict(value = {"categorias", "categoria"}, allEntries = true)
     @Transactional
-    public void deletar(Long id) {
+    public void deletar(UUID id) {
         Categoria categoria = buscarPorId(id);
-        categoriaRepository.delete(categoria);
+        // Soft Delete
+        categoria.desativar();
+        categoriaRepository.save(categoria);
     }
 }

@@ -6,50 +6,21 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.UUID;
-
 @Entity
 @Table(name = "tb_categorias")
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class Categoria {
+@NoArgsConstructor
+public class Categoria extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private java.util.UUID id;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "nome", length = 100, nullable = false, unique = true)
     private String nome;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "descricao", columnDefinition = "text")
     private String descricao;
-
-    @Column(name = "criado_em", nullable = false, updatable = false)
-    private java.time.OffsetDateTime criadoEm;
-
-    @Column(name = "atualizado_em", nullable = false)
-    private java.time.OffsetDateTime atualizadoEm;
-
-    @Column(name = "criado_por")
-    private UUID criadoPor;
-
-    @Column(name = "atualizado_por")
-    private UUID atualizadoPor;
-
-    @Column(nullable = false)
-    private Boolean ativo = true;
-
-    @PrePersist
-    protected void onCreate() {
-        this.criadoEm = java.time.OffsetDateTime.now();
-        this.atualizadoEm = java.time.OffsetDateTime.now();
-        this.ativo = true;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.atualizadoEm = java.time.OffsetDateTime.now();
-    }
 }
