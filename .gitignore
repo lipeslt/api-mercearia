@@ -31,3 +31,27 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# ===============================
+# SECRETS / ENV FILES
+# ===============================
+.env
+.env.*
+*.env
+
+# ===============================
+# DATABASE DUMPS / BACKUPS
+# ===============================
+backup_mercearia.sql
+*.sql.backup
+*.dump
+*.bak
+
+# Se você costuma gerar dumps SQL localmente, descomente a linha abaixo:
+# *.sql
+
+# ===============================
+# LOGS
+# ===============================
+*.log
+logs/
