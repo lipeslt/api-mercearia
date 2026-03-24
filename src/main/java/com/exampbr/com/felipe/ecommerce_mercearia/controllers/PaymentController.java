@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
@@ -40,7 +42,7 @@ public class PaymentController {
     @GetMapping("/pedido/{pedidoId}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @Operation(summary = "Obter pagamento por pedido", description = "Retorna o pagamento associado a um pedido")
-    public ResponseEntity<PaymentResponseDTO> getPaymentByPedido(@PathVariable Long pedidoId) {
+    public ResponseEntity<PaymentResponseDTO> getPaymentByPedido(@PathVariable UUID pedidoId) {
         PaymentResponseDTO payment = paymentService.getPaymentByPedidoId(pedidoId);
         return ResponseEntity.ok(payment);
     }

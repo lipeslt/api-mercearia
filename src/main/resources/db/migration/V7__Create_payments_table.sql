@@ -31,9 +31,19 @@ BEGIN
     END IF;
 END$$;
 
-ALTER TABLE payments
-    ADD CONSTRAINT IF NOT EXISTS fk_payments_pedido
-    FOREIGN KEY (pedido_id) REFERENCES tb_pedidos(id) ON DELETE CASCADE;
+-- Add Foreign Key with safe existence check
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'fk_payments_pedido'
+    ) THEN
+        ALTER TABLE payments
+            ADD CONSTRAINT fk_payments_pedido
+            FOREIGN KEY (pedido_id) REFERENCES tb_pedidos(id) ON DELETE CASCADE;
+    END IF;
+END$$;
 
 CREATE INDEX IF NOT EXISTS idx_payments_pedido_id ON payments(pedido_id);
 CREATE INDEX IF NOT EXISTS idx_payments_mercado_pago_id ON payments(mercado_pago_id);

@@ -2,14 +2,15 @@ package com.exampbr.com.felipe.ecommerce_mercearia.dtos;
 
 import com.exampbr.com.felipe.ecommerce_mercearia.enums.PaymentStatus;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 public record PaymentResponseDTO(
         Long id,
-        Long pedidoId,
+        String pedidoId,
         String mercadoPagoId,
         BigDecimal amount,
         PaymentStatus status,
         String paymentMethod,
-        LocalDateTime createdAt
+        OffsetDateTime createdAt
 ) {}

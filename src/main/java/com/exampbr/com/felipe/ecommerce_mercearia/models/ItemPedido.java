@@ -7,18 +7,20 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
-@Table(name = "item_pedido")
+@Table(name = "tb_itens_pedido")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ItemPedido extends AuditableEntity {
+public class ItemPedido {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "pedido_id", nullable = false)
@@ -31,6 +33,23 @@ public class ItemPedido extends AuditableEntity {
     @Column(nullable = false)
     private Integer quantidade;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precoUnitario;
+
+    @Column(name = "criado_em", nullable = false, updatable = false)
+    private OffsetDateTime criadoEm;
+
+    @Column(name = "atualizado_em", nullable = false)
+    private OffsetDateTime atualizadoEm;
+
+    @PrePersist
+    protected void onCreate() {
+        this.criadoEm = OffsetDateTime.now();
+        this.atualizadoEm = OffsetDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.atualizadoEm = OffsetDateTime.now();
+    }
 }

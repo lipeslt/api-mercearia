@@ -79,7 +79,7 @@ public class PaymentService {
         return convertToDTO(payment);
     }
 
-    public PaymentResponseDTO getPaymentByPedidoId(Long pedidoId) {
+    public PaymentResponseDTO getPaymentByPedidoId(java.util.UUID pedidoId) {
         Payment payment = paymentRepository.findByPedidoId(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Nenhum pagamento encontrado para este pedido"));
         return convertToDTO(payment);
@@ -136,7 +136,7 @@ public class PaymentService {
     private PaymentResponseDTO convertToDTO(Payment payment) {
         return new PaymentResponseDTO(
                 payment.getId(),
-                payment.getPedido().getId(),
+                payment.getPedido().getId().toString(), // Converte UUID para String
                 payment.getMercadoPagoId(),
                 payment.getAmount(),
                 payment.getStatus(),

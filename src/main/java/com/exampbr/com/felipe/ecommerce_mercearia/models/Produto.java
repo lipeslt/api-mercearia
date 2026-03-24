@@ -7,20 +7,22 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
-@Table(name = "produto")
+@Table(name = "tb_produtos")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Produto extends AuditableEntity {
+public class Produto {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 150)
     private String nome;
 
     @Column(columnDefinition = "TEXT")
@@ -35,4 +37,31 @@ public class Produto extends AuditableEntity {
     @ManyToOne
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
+
+    @Column(name = "criado_em", nullable = false, updatable = false)
+    private OffsetDateTime criadoEm;
+
+    @Column(name = "atualizado_em", nullable = false)
+    private OffsetDateTime atualizadoEm;
+
+    @Column(name = "criado_por")
+    private UUID criadoPor;
+
+    @Column(name = "atualizado_por")
+    private UUID atualizadoPor;
+
+    @Column(nullable = false)
+    private Boolean ativo = true;
+
+    @PrePersist
+    protected void onCreate() {
+        this.criadoEm = OffsetDateTime.now();
+        this.atualizadoEm = OffsetDateTime.now();
+        this.ativo = true;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.atualizadoEm = OffsetDateTime.now();
+    }
 }

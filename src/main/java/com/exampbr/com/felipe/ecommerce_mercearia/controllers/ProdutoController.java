@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/produtos")
 @Tag(name = "Produtos", description = "Endpoints para gerenciamento de produtos")
@@ -36,14 +38,14 @@ public class ProdutoController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar produto por ID", description = "Retorna um produto específico")
-    public ResponseEntity<ProdutoResponseDTO> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ProdutoResponseDTO> buscarPorId(@PathVariable UUID id) {
         return ResponseEntity.ok(produtoService.buscarPorId(id));
     }
 
     @GetMapping("/categoria/{categoriaId}")
     @Operation(summary = "Listar produtos por categoria", description = "Retorna produtos de uma categoria específica")
     public ResponseEntity<Page<ProdutoResponseDTO>> buscarPorCategoria(
-            @PathVariable Long categoriaId,
+            @PathVariable UUID categoriaId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -58,13 +60,13 @@ public class ProdutoController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar produto", description = "Atualiza um produto existente")
-    public ResponseEntity<ProdutoResponseDTO> atualizar(@PathVariable Long id, @Valid @RequestBody ProdutoRequestDTO dto) {
+    public ResponseEntity<ProdutoResponseDTO> atualizar(@PathVariable UUID id, @Valid @RequestBody ProdutoRequestDTO dto) {
         return ResponseEntity.ok(produtoService.atualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Deletar produto", description = "Deleta um produto existente")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+    public ResponseEntity<Void> deletar(@PathVariable UUID id) {
         produtoService.deletar(id);
         return ResponseEntity.noContent().build();
     }

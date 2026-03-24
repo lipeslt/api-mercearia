@@ -15,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class ProdutoService {
 
@@ -31,14 +33,14 @@ public class ProdutoService {
     }
 
     @Cacheable(value = "produto", key = "#id")
-    public ProdutoResponseDTO buscarPorId(Long id) {
+    public ProdutoResponseDTO buscarPorId(UUID id) {
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
         return convertToResponseDTO(produto);
     }
 
     @Cacheable(value = "produtosPorCategoria", key = "#categoriaId")
-    public Page<ProdutoResponseDTO> buscarPorCategoria(Long categoriaId, Pageable pageable) {
+    public Page<ProdutoResponseDTO> buscarPorCategoria(UUID categoriaId, Pageable pageable) {
         return produtoRepository.findByCategoriaId(categoriaId, pageable)
                 .map(this::convertToResponseDTO);
     }
@@ -61,7 +63,7 @@ public class ProdutoService {
 
     @CacheEvict(value = {"produtos", "produto", "produtosPorCategoria"}, allEntries = true)
     @Transactional
-    public ProdutoResponseDTO atualizar(Long id, ProdutoRequestDTO dto) {
+    public ProdutoResponseDTO atualizar(UUID id, ProdutoRequestDTO dto) {
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
 
@@ -79,7 +81,7 @@ public class ProdutoService {
 
     @CacheEvict(value = {"produtos", "produto", "produtosPorCategoria"}, allEntries = true)
     @Transactional
-    public void deletar(Long id) {
+    public void deletar(UUID id) {
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
         produtoRepository.delete(produto);
@@ -93,8 +95,8 @@ public class ProdutoService {
                 produto.getPreco(),
                 produto.getEstoque(),
                 produto.getCategoria().getId(),
-                produto.getCreatedAt(),
-                produto.getUpdatedAt()
+                produto.getCriadoEm(),
+                produto.getAtualizadoEm()
         );
     }
 }
