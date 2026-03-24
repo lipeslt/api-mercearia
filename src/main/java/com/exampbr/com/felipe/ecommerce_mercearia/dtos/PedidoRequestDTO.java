@@ -9,5 +9,6 @@ public record PedidoRequestDTO(
         @NotNull(message = "ID do usuário é obrigatório")
         UUID usuarioId,
 
-        String status
+        @Positive(message = "Quantidade deve ser positiva")
+        Integer quantidade
 ) {}

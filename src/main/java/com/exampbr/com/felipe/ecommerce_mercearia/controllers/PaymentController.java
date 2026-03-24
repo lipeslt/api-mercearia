@@ -6,53 +6,49 @@ import com.exampbr.com.felipe.ecommerce_mercearia.services.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/payments")
-@Tag(name = "Payments", description = "Gerenciamento de pagamentos")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*", maxAge = 3600)
+@Tag(name = "Payments", description = "Endpoints para gerenciar pagamentos")
 public class PaymentController {
 
-    private final PaymentService paymentService;
+    @Autowired
+    private PaymentService paymentService;
 
-    @GetMapping
-    @Operation(summary = "Listar todos os pagamentos")
-    public ResponseEntity<Page<Payment>> listar(Pageable pageable) {
-        return ResponseEntity.ok(paymentService.listar(pageable));
+    @PostMapping
+    @Operation(summary = "Criar preferência de pagamento")
+    public ResponseEntity<Payment> createPaymentPreference(@Valid @RequestBody PaymentRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(paymentService.createPaymentPreference(dto));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar pagamento por ID")
-    public ResponseEntity<Payment> buscarPorId(@PathVariable UUID id) {
-        return ResponseEntity.ok(paymentService.buscarPorId(id));
+    @Operation(summary = "Obter pagamento por ID")
+    public ResponseEntity<Payment> getPaymentById(@PathVariable Long id) {
+        Optional<Payment> payment = paymentService.getPaymentById(id);
+        return payment.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    @Operation(summary = "Criar novo pagamento")
-    public ResponseEntity<Payment> criar(@Valid @RequestBody PaymentRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(paymentService.criar(dto));
+    @GetMapping("/pedido/{pedidoId}")
+    @Operation(summary = "Obter pagamento por ID do pedido")
+    public ResponseEntity<Payment> getPaymentByPedidoId(@PathVariable UUID pedidoId) {
+        Optional<Payment> payment = paymentService.getPaymentByPedidoId(pedidoId);
+        return payment.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Atualizar pagamento")
-    public ResponseEntity<Payment> atualizar(@PathVariable UUID id, @Valid @RequestBody PaymentRequestDTO dto) {
-        return ResponseEntity.ok(paymentService.atualizar(id, dto));
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Deletar pagamento")
-    public ResponseEntity<Void> deletar(@PathVariable UUID id) {
-        paymentService.deletar(id);
-        return ResponseEntity.noContent().build();
+    @PostMapping("/webhook")
+    @Operation(summary = "Processar webhook de pagamento")
+    public ResponseEntity<Void> processWebhookPayment(@RequestBody String data) {
+        paymentService.processWebhookPayment(data);
+        return ResponseEntity.ok().build();
     }
 }

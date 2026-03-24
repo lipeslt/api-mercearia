@@ -5,11 +5,12 @@ import com.exampbr.com.felipe.ecommerce_mercearia.dtos.LoginResponseDTO;
 import com.exampbr.com.felipe.ecommerce_mercearia.dtos.RegisterDTO;
 import com.exampbr.com.felipe.ecommerce_mercearia.models.Usuario;
 import com.exampbr.com.felipe.ecommerce_mercearia.repositories.UsuarioRepository;
+import com.exampbr.com.felipe.ecommerce_mercearia.repositories.TentativaLoginRepository;
 import com.exampbr.com.felipe.ecommerce_mercearia.services.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,80 +20,88 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "Autenticação", description = "Endpoints de autenticação")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*", maxAge = 3600)
+@Tag(name = "Authentication", description = "Endpoints de autenticação")
 public class AuthController {
 
-    private final UsuarioRepository usuarioRepository;
-    private final TokenService tokenService;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private TentativaLoginRepository tentativaLoginRepository;
+
+    @Autowired
+    private TokenService tokenService;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
     @Operation(summary = "Registrar novo usuário")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterDTO dto) {
+    public ResponseEntity<LoginResponseDTO> registrar(@Valid @RequestBody RegisterDTO dto) {
+        // Verificar se usuário já existe
         Optional<Usuario> usuarioExistente = usuarioRepository.findByEmail(dto.email());
+
         if (usuarioExistente.isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("{\"erro\": \"Email já cadastrado\"}");
+            return ResponseEntity.badRequest().build();
         }
 
+        // Criar novo usuário
         Usuario usuario = new Usuario();
         usuario.setNome(dto.nome());
         usuario.setEmail(dto.email());
-        usuario.setSenha(bCryptPasswordEncoder.encode(dto.password()));
-        usuario.setRole("USER");
+        usuario.setSenha(passwordEncoder.encode(dto.password()));
 
         usuarioRepository.save(usuario);
 
+        // Gerar token
+        String token = tokenService.generateToken(usuario);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("{\"mensagem\": \"Usuário registrado com sucesso\"}");
+                .body(new LoginResponseDTO(token));
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Login do usuário")
+    @Operation(summary = "Fazer login")
     public ResponseEntity<?> login(@Valid @RequestBody AuthenticationDTO dto) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(dto.email());
+        Optional<Usuario> usuario = usuarioRepository.findByEmail(dto.email());
 
-        if (usuarioOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("{\"erro\": \"Usuário não encontrado\"}");
+        if (usuario.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        Usuario usuario = usuarioOpt.get();
-
-        if (!bCryptPasswordEncoder.matches(dto.senha(), usuario.getSenha())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("{\"erro\": \"Senha incorreta\"}");
+        // Verificar senha
+        if (!passwordEncoder.matches(dto.senha(), usuario.get().getSenha())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        String token = tokenService.generateToken(usuario);
+        // Gerar token
+        String token = tokenService.generateToken(usuario.get());
+
         return ResponseEntity.ok(new LoginResponseDTO(token));
     }
 
     @PostMapping("/refresh")
     @Operation(summary = "Renovar token JWT")
-    public ResponseEntity<?> refresh(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("{\"erro\": \"Token não fornecido\"}");
+    public ResponseEntity<LoginResponseDTO> refresh(@RequestHeader("Authorization") String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().build();
         }
 
-        String token = authHeader.substring(7);
-        String email = tokenService.validateToken(token);
+        String jwt = token.replace("Bearer ", "");
 
-        if (email == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("{\"erro\": \"Token inválido\"}");
+        try {
+            String email = tokenService.validateToken(jwt);
+            Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+
+            if (usuarioOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            String novoToken = tokenService.generateToken(usuarioOpt.get());
+            return ResponseEntity.ok(new LoginResponseDTO(novoToken));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-        if (usuarioOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("{\"erro\": \"Usuário não encontrado\"}");
-        }
-
-        String novoToken = tokenService.generateToken(usuarioOpt.get());
-        return ResponseEntity.ok(new LoginResponseDTO(novoToken));
     }
 }

@@ -8,8 +8,5 @@ public record PaymentRequestDTO(
         @NotNull(message = "Pedido ID não pode ser nulo")
         UUID pedidoId,
 
-        @NotNull(message = "Método de pagamento é obrigatório")
-        String metodo,
-
-        String status
+        String metodo
 ) {}
