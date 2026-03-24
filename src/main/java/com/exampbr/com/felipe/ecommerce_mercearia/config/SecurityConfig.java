@@ -64,9 +64,8 @@ public class SecurityConfig {
 
                 // Security Headers
                 .headers(headers -> headers
-                        .frameOptions(frame -> frame.deny())
-                        .xssProtection()
-                        .contentSecurityPolicy("default-src 'self'")
+                        .frameOptions(frameOptions -> frameOptions.deny())
+                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
                 );
 
         return http.build();

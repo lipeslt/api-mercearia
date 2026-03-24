@@ -1,92 +1,123 @@
-# 🛒 E-commerce Mercearia - API REST
+# 🛒 API Mercearia - E-commerce Platform
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/lipeslt/api-mercearia)
-[![Java Version](https://img.shields.io/badge/java-21-blue)](https://www.oracle.com/java/technologies/downloads/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.3-green)](https://spring.io/projects/spring-boot)
-[![License](https://img.shields.io/badge/license-MIT-blue)](#licença)
+[![Build Status](https://github.com/lipeslt/api-mercearia/actions/workflows/build.yml/badge.svg)](https://github.com/lipeslt/api-mercearia/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Java Version](https://img.shields.io/badge/Java-21-blue)](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.3-brightgreen)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17.9-336791)](https://www.postgresql.org/)
 
-Uma API REST robusta e segura para gerenciar e-commerce de mercearias. Desenvolvida com **Spring Boot 3.2.3**, **PostgreSQL**, **JWT Authentication** e integração com **Mercado Pago**.
-
----
+Uma API REST robusta, segura e escalável para gerenciamento de e-commerce de mercearia, desenvolvida com Spring Boot 3.2.3 e as melhores práticas de arquitetura moderna.
 
 ## 📋 Índice
 
-- [Visão Geral](#visão-geral)
-- [Recursos](#-recursos)
-- [Pré-requisitos](#-pré-requisitos)
-- [Instalação](#-instalação)
-- [Configuração](#-configuração)
-- [Como Usar](#-como-usar)
-- [API Endpoints](#-api-endpoints)
-- [Segurança](#-segurança)
-- [Testes](#-testes)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Contribuindo](#-contribuindo)
-- [Licença](#licença)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+- [Environment Variables](#environment-variables)
+- [API Documentation](#api-documentation)
+- [Docker Setup](#docker-setup)
+- [Database](#database)
+- [Security](#security)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
-## 🎯 Visão Geral
+## ✨ Features
 
-Este projeto é uma API REST profissional para gerenciar um e-commerce de mercearia, incluindo:
+### 🔐 Autenticação & Autorização
+- ✅ JWT (JSON Web Tokens) com refresh token
+- ✅ BCrypt password hashing
+- ✅ Rate limiting (5 tentativas de login)
+- ✅ Bloqueio de conta após falhas repetidas
+- ✅ CORS configurado para múltiplas origens
 
-✅ **Autenticação JWT** com refresh tokens  
-✅ **Rate Limiting** para proteção contra ataques  
-✅ **Bloqueio de Conta** após tentativas falhas  
-✅ **Integração Mercado Pago** para pagamentos  
-✅ **Auditoria de Operações** com logs detalhados  
-✅ **Cache distribuído** com Redis  
-✅ **Validação robusta** de dados  
-✅ **Testes automatizados** com cobertura completa
+### 📦 Gerenciamento de Dados
+- ✅ Soft delete (exclusão lógica)
+- ✅ Audit columns (created_at, updated_at, created_by, updated_by)
+- ✅ UUID como primary key (segurança)
+- ✅ Paginação em todos os endpoints
+- ✅ Filtros avançados
 
----
+### 🛡️ Segurança
+- ✅ Spring Security 6.2.2
+- ✅ HTTPS Ready
+- ✅ Security Headers (CSP, X-Frame-Options)
+- ✅ SQL Injection Prevention
+- ✅ XSS Protection
+- ✅ CSRF Protection
 
-## ✨ Recursos
+### 🔄 CI/CD & DevOps
+- ✅ GitHub Actions (build, test, deploy)
+- ✅ Docker & Docker Compose
+- ✅ Database migrations (Flyway)
+- ✅ Health check endpoint
+- ✅ Metrics exposure (Actuator)
 
-### Autenticação & Segurança
-- 🔐 JWT (JSON Web Tokens) com access/refresh tokens
-- ⏱️ Access Token (15 minutos) + Refresh Token (7 dias)
-- 🔒 Hash de senhas com BCrypt
-- 🚫 Rate Limiting (60 req/min por IP)
-- 🔐 Bloqueio de conta após 5 tentativas falhas
-- 📝 Auditoria completa de operações
-- ✅ CORS configurável
+### 📊 Observabilidade
+- ✅ Request/Response logging
+- ✅ Performance metrics
+- ✅ Error tracking
+- ✅ Distributed tracing ready
 
-### Gerenciamento de Produtos
-- 📦 CRUD completo de produtos
-- 🏷️ Categorias e filtragem
-- 🖼️ Upload de imagens
-- 📊 Controle de estoque com pessimistic lock
-- ⭐ Avaliações e comentários
-
-### Pedidos & Pagamentos
-- 🛒 Carrinho de compras
-- 📋 Gerenciamento de pedidos
-- 💳 Integração Mercado Pago (Pix, Cartão Crédito)
-- 📧 Notificações por email
-- 🔔 Webhooks para atualizações de pagamento
-
-### Admin & Relatórios
-- 👥 Gerenciamento de usuários
-- 📊 Relatórios de vendas (Excel/PDF)
-- 🕐 Análise de performance
-- 📈 Dashboard de métricas
+### 📚 Documentação
+- ✅ Swagger/OpenAPI 3.0
+- ✅ Auto-generated API docs
+- ✅ Postman collection
+- ✅ Architecture documentation
 
 ---
 
-## 📦 Pré-requisitos
+## 🛠️ Tech Stack
 
-Antes de começar, certifique-se de ter instalado:
+### Backend
+- **Java 21** - Latest LTS version
+- **Spring Boot 3.2.3** - Framework web
+- **Spring Security 6.2.2** - Autenticação e autorização
+- **Spring Data JPA** - ORM
+- **Hibernate 6.4.4** - Mapeamento ORM
 
-- **Java 21+** → [Download](https://www.oracle.com/java/technologies/downloads/)
-- **Maven 3.8+** → [Download](https://maven.apache.org/download.cgi)
-- **PostgreSQL 12+** → [Download](https://www.postgresql.org/download/)
-- **Git** → [Download](https://git-scm.com/)
-- **Docker** (opcional) → [Download](https://www.docker.com/)
+### Database
+- **PostgreSQL 17.9** - Banco de dados relacional
+- **Flyway 9.22.3** - Versionamento de schema
+- **HikariCP** - Connection pooling
 
-### Verificar Instalação
+### Development Tools
+- **Maven 3.9+** - Build tool
+- **Docker** - Containerização
+- **Git** - Version control
+- **Postman** - API testing
+
+### Libraries
+- **Lombok** - Redução de boilerplate
+- **Jackson** - JSON processing
+- **JWT (Auth0)** - Token management
+- **Springdoc OpenAPI** - Swagger/OpenAPI
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Java 21+
+- PostgreSQL 15+
+- Maven 3.9+
+- Docker & Docker Compose (opcional)
+
+### Installation
 
 ```bash
-java -version          # Java 21
-mvn -version           # Maven 3.8+
-psql --version         # PostgreSQL 12+
+# 1. Clone o repositório
+git clone https://github.com/lipeslt/api-mercearia.git
+cd api-mercearia
+
+# 2. Configure as variáveis de ambiente
+cp .env.example .env
+nano .env  # Edite com suas credenciais
+
+# 3. Crie o banco de dados
+createdb -U postgres mercearia_db
+
+# 4. Execute a aplicação
+./mvnw clean spring-boot:run

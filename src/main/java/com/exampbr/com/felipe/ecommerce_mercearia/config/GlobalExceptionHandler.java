@@ -1,5 +1,6 @@
 package com.exampbr.com.felipe.ecommerce_mercearia.config;
 
+import com.exampbr.com.felipe.ecommerce_mercearia.dtos.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -79,13 +80,10 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException ex,
             WebRequest request) {
 
-        Map<String, String> errors = ex.getBindingResult()
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult()
                 .getFieldErrors()
-                .stream()
-                .collect(Collectors.toMap(
-                        error -> error.getField(),
-                        error -> error.getDefaultMessage()
-                ));
+                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
         ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
