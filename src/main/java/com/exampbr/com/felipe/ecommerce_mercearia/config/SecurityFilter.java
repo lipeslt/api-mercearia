@@ -34,7 +34,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         String requestUri = request.getRequestURI();
 
         try {
-            if (requestUri.startsWith("/api/auth/") ||
+            if (requestUri.startsWith("/auth") ||
                     requestUri.startsWith("/swagger-ui") ||
                     requestUri.startsWith("/v3/api-docs") ||
                     requestUri.startsWith("/api-docs") ||
@@ -48,28 +48,28 @@ public class SecurityFilter extends OncePerRequestFilter {
             var token = this.recuperarToken(request);
 
             if (token != null) {
-                var email = tokenService.validarToken(token);
+                try {
+                    var email = tokenService.validateToken(token);
 
-                if (!email.isEmpty()) {
-                    UserDetails usuario = usuarioRepository.findByEmail(email);
+                    if (email != null && !email.isEmpty()) {
+                        UserDetails usuario = usuarioRepository.findByEmail(email);
 
-                    if (usuario != null) {
-                        var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                        logger.info("Usuário autenticado: {}", email);
+                        if (usuario != null) {
+                            var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+                            logger.info("Usuário autenticado: {}", email);
+                        } else {
+                            logger.warn("Usuário não encontrado no banco: {}", email);
+                        }
                     } else {
-                        logger.warn("Usuário não encontrado no banco: {}", email);
+                        logger.warn("Token inválido, vazio ou expirado");
                     }
-                } else {
-                    logger.warn("Token inválido, vazio ou expirado");
+                } catch (JWTVerificationException exception) {
+                    logger.error("Token JWT inválido: {}", exception.getMessage());
                 }
             }
             filterChain.doFilter(request, response);
 
-        } catch (JWTVerificationException exception) {
-            logger.error("Erro ao verificar JWT: {}", exception.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"error\": \"Token inválido ou expirado\"}");
         } catch (Exception exception) {
             logger.error("Erro inesperado no SecurityFilter: {}", exception.getMessage(), exception);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

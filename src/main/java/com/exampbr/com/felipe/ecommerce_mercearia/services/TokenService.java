@@ -2,6 +2,7 @@ package com.exampbr.com.felipe.ecommerce_mercearia.services;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
 import com.exampbr.com.felipe.ecommerce_mercearia.models.Usuario;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.UUID;
 
 @Service
 public class TokenService {
@@ -18,38 +18,37 @@ public class TokenService {
     private String secret;
 
     public String generateToken(Usuario usuario) {
-        Algorithm algorithm = Algorithm.HMAC256(secret);
-        String token = JWT.create()
-                .withIssuer("auth-api")
-                .withSubject(usuario.getEmail())
-                .withClaim("id", usuario.getId().toString())
-                .withClaim("role", usuario.getRole())
-                .withExpiresAt(generateExpirationDate())
-                .sign(algorithm);
-        return token;
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+
+            return JWT.create()
+                    .withIssuer("auth-api")
+                    .withSubject(usuario.getEmail())
+                    .withClaim("id", usuario.getId().toString())
+                    .withClaim("email", usuario.getEmail())
+                    .withClaim("role", usuario.getRole())
+                    .withExpiresAt(generateExpirationDate())
+                    .sign(algorithm);
+        } catch (JWTCreationException e) {
+            throw new RuntimeException("Erro ao gerar token JWT", e);
+        }
     }
 
     public String validateToken(String token) {
-        Algorithm algorithm = Algorithm.HMAC256(secret);
-        return JWT.require(algorithm)
-                .withIssuer("auth-api")
-                .build()
-                .verify(token)
-                .getSubject();
-    }
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secret);
 
-    public UUID getUsuarioIdFromToken(String token) {
-        Algorithm algorithm = Algorithm.HMAC256(secret);
-        String idString = JWT.require(algorithm)
-                .withIssuer("auth-api")
-                .build()
-                .verify(token)
-                .getClaim("id")
-                .asString();
-        return UUID.fromString(idString);
+            return JWT.require(algorithm)
+                    .withIssuer("auth-api")
+                    .build()
+                    .verify(token)
+                    .getSubject();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private Instant generateExpirationDate() {
-        return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
+        return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-04:00"));
     }
 }
