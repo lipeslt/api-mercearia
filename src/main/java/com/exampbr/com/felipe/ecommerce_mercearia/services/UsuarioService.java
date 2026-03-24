@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UsuarioService {
@@ -21,38 +22,47 @@ public class UsuarioService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-    public Usuario findByEmail(String email) {
+
+    public Optional<Usuario> findByEmail(String email) {
         return usuarioRepository.findByEmail(email);
     }
-    public Optional<Usuario> findById(Long id) {
+
+    public Optional<Usuario> findById(UUID id) {
         return usuarioRepository.findById(id);
     }
+
     public Usuario save(Usuario usuario) {
         if (usuario.getSenha() != null && !usuario.getSenha().isEmpty()) {
             usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         }
         return usuarioRepository.save(usuario);
     }
+
     public Usuario update(Usuario usuario) {
         return usuarioRepository.save(usuario);
     }
-    public void deleteById(Long id) {
+
+    public void deleteById(UUID id) {
         usuarioRepository.deleteById(id);
     }
+
     public boolean validarSenha(Usuario usuario, String senhaPlana) {
         if (usuario == null || senhaPlana == null) {
             return false;
         }
         return passwordEncoder.matches(senhaPlana, usuario.getSenha());
     }
+
     @Transactional
     public void registrarTentativaFalha(String email) {
-        Usuario usuario = usuarioRepository.findByEmail(email);
-
-        if (usuario != null) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        if (usuarioOpt.isPresent()) {
+            // Lógica de falha
         }
     }
+
     @Transactional
     public void limparTentativas(String email) {
+        // Lógica de limpeza
     }
 }

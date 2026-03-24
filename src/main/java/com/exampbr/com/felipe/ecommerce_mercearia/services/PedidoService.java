@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class PedidoService {
 
@@ -25,7 +27,7 @@ public class PedidoService {
         return pedidoRepository.findAll(pageable);
     }
 
-    public Pedido buscarPorId(Long id) {
+    public Pedido buscarPorId(UUID id) {
         return pedidoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado"));
     }
@@ -43,7 +45,7 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido atualizar(Long id, PedidoRequestDTO dto) {
+    public Pedido atualizar(UUID id, PedidoRequestDTO dto) {
         Pedido pedido = buscarPorId(id);
 
         if (dto.status() != null) {
@@ -54,7 +56,7 @@ public class PedidoService {
     }
 
     @Transactional
-    public void deletar(Long id) {
+    public void deletar(UUID id) {
         Pedido pedido = buscarPorId(id);
         pedidoRepository.delete(pedido);
     }

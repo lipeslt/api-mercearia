@@ -1,62 +1,58 @@
 package com.exampbr.com.felipe.ecommerce_mercearia.controllers;
 
 import com.exampbr.com.felipe.ecommerce_mercearia.dtos.PaymentRequestDTO;
-import com.exampbr.com.felipe.ecommerce_mercearia.dtos.PaymentResponseDTO;
-import com.exampbr.com.felipe.ecommerce_mercearia.dtos.PreferenceDTO;
+import com.exampbr.com.felipe.ecommerce_mercearia.models.Payment;
 import com.exampbr.com.felipe.ecommerce_mercearia.services.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/payments")
+@RequestMapping("/payments")
+@Tag(name = "Payments", description = "Gerenciamento de pagamentos")
 @RequiredArgsConstructor
-@Tag(name = "Pagamentos", description = "API de Pagamentos com Mercado Pago")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("/create-preference")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @Operation(summary = "Criar preferência de pagamento", description = "Cria uma preferência de pagamento no Mercado Pago")
-    public ResponseEntity<PreferenceDTO> createPaymentPreference(
-            @Valid @RequestBody PaymentRequestDTO paymentRequest) {
-        PreferenceDTO preference = paymentService.createPaymentPreference(paymentRequest);
-        return ResponseEntity.ok(preference);
+    @GetMapping
+    @Operation(summary = "Listar todos os pagamentos")
+    public ResponseEntity<Page<Payment>> listar(Pageable pageable) {
+        return ResponseEntity.ok(paymentService.listar(pageable));
     }
 
-    @GetMapping("/{paymentId}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @Operation(summary = "Obter pagamento por ID", description = "Retorna os detalhes de um pagamento")
-    public ResponseEntity<PaymentResponseDTO> getPayment(@PathVariable Long paymentId) {
-        PaymentResponseDTO payment = paymentService.getPaymentById(paymentId);
-        return ResponseEntity.ok(payment);
+    @GetMapping("/{id}")
+    @Operation(summary = "Buscar pagamento por ID")
+    public ResponseEntity<Payment> buscarPorId(@PathVariable UUID id) {
+        return ResponseEntity.ok(paymentService.buscarPorId(id));
     }
 
-    @GetMapping("/pedido/{pedidoId}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @Operation(summary = "Obter pagamento por pedido", description = "Retorna o pagamento associado a um pedido")
-    public ResponseEntity<PaymentResponseDTO> getPaymentByPedido(@PathVariable UUID pedidoId) {
-        PaymentResponseDTO payment = paymentService.getPaymentByPedidoId(pedidoId);
-        return ResponseEntity.ok(payment);
+    @PostMapping
+    @Operation(summary = "Criar novo pagamento")
+    public ResponseEntity<Payment> criar(@Valid @RequestBody PaymentRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(paymentService.criar(dto));
     }
 
-    @PostMapping("/webhook")
-    @Operation(summary = "Webhook do Mercado Pago", description = "Recebe notificações de pagamento do Mercado Pago")
-    public ResponseEntity<String> handleWebhook(
-            @RequestParam(required = false) String id,
-            @RequestParam(required = false) String type) {
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar pagamento")
+    public ResponseEntity<Payment> atualizar(@PathVariable UUID id, @Valid @RequestBody PaymentRequestDTO dto) {
+        return ResponseEntity.ok(paymentService.atualizar(id, dto));
+    }
 
-        if ("payment".equals(type) && id != null) {
-            paymentService.processWebhookPayment(id);
-        }
-
-        return ResponseEntity.ok("Webhook processado");
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Deletar pagamento")
+    public ResponseEntity<Void> deletar(@PathVariable UUID id) {
+        paymentService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 }

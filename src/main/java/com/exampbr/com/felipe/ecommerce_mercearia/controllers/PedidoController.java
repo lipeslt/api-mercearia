@@ -6,56 +6,53 @@ import com.exampbr.com.felipe.ecommerce_mercearia.services.PedidoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
-@RequestMapping("/api/pedidos")
-@Tag(name = "Pedidos", description = "Endpoints para gerenciamento de pedidos")
+@RequestMapping("/pedidos")
+@Tag(name = "Pedidos", description = "Gerenciamento de pedidos")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class PedidoController {
 
-    @Autowired
-    private PedidoService service;
+    private final PedidoService pedidoService;
 
     @GetMapping
-    @Operation(summary = "Listar pedidos", description = "Retorna uma lista paginada de pedidos")
-    public ResponseEntity<Page<Pedido>> listar(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        return ResponseEntity.ok(service.listar(pageable));
+    @Operation(summary = "Listar todos os pedidos")
+    public ResponseEntity<Page<Pedido>> listar(Pageable pageable) {
+        return ResponseEntity.ok(pedidoService.listar(pageable));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar pedido por ID", description = "Retorna um pedido específico")
-    public ResponseEntity<Pedido> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.buscarPorId(id));
+    @Operation(summary = "Buscar pedido por ID")
+    public ResponseEntity<Pedido> buscarPorId(@PathVariable UUID id) {
+        return ResponseEntity.ok(pedidoService.buscarPorId(id));
     }
 
     @PostMapping
-    @Operation(summary = "Criar pedido", description = "Cria um novo pedido")
+    @Operation(summary = "Criar novo pedido")
     public ResponseEntity<Pedido> criar(@Valid @RequestBody PedidoRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(dto));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(pedidoService.criar(dto));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar pedido", description = "Atualiza um pedido existente")
-    public ResponseEntity<Pedido> atualizar(@PathVariable Long id, @Valid @RequestBody PedidoRequestDTO dto) {
-        return ResponseEntity.ok(service.atualizar(id, dto));
+    @Operation(summary = "Atualizar pedido")
+    public ResponseEntity<Pedido> atualizar(@PathVariable UUID id, @Valid @RequestBody PedidoRequestDTO dto) {
+        return ResponseEntity.ok(pedidoService.atualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Deletar pedido", description = "Deleta um pedido existente")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        service.deletar(id);
+    @Operation(summary = "Deletar pedido")
+    public ResponseEntity<Void> deletar(@PathVariable UUID id) {
+        pedidoService.deletar(id);
         return ResponseEntity.noContent().build();
     }
 }
