@@ -11,11 +11,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ProdutoService {
@@ -41,9 +46,15 @@ public class ProdutoService {
 
     @Cacheable(value = "produtosPorCategoria", key = "#categoriaId")
     public Page<ProdutoResponseDTO> buscarPorCategoria(UUID categoriaId, Pageable pageable) {
-        return produtoRepository.findAll(pageable)
+        Page<Produto> allProdutos = produtoRepository.findAll(pageable);
+
+        var produtosFiltrados = allProdutos.getContent()
+                .stream()
                 .filter(p -> p.getCategoria().getId().equals(categoriaId))
-                .map(this::convertToResponseDTO);
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(produtosFiltrados, pageable, allProdutos.getTotalElements());
     }
 
     @CacheEvict(value = {"produtos", "produto", "produtosPorCategoria"}, allEntries = true)
@@ -58,6 +69,7 @@ public class ProdutoService {
         produto.setPreco(dto.preco());
         produto.setEstoque(dto.estoque());
         produto.setCategoria(categoria);
+        produto.setAtivo(true); // Soft Delete: novo produto começa ativo
 
         return convertToResponseDTO(produtoRepository.save(produto));
     }
@@ -85,7 +97,10 @@ public class ProdutoService {
     public void deletar(UUID id) {
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
-        produtoRepository.delete(produto);
+
+        // Soft Delete: marca como inativo ao invés de deletar fisicamente
+        produto.setAtivo(false);
+        produtoRepository.save(produto);
     }
 
     private ProdutoResponseDTO convertToResponseDTO(Produto produto) {
@@ -96,8 +111,19 @@ public class ProdutoService {
                 produto.getPreco(),
                 produto.getEstoque(),
                 produto.getCategoria().getId(),
-                produto.getCriadoEm(),
-                produto.getAtualizadoEm()
+                convertLocalDateTimeToOffsetDateTime(produto.getCriadoEm()),
+                convertLocalDateTimeToOffsetDateTime(produto.getAtualizadoEm())
         );
+    }
+
+    /**
+     * Converte LocalDateTime para OffsetDateTime usando UTC
+     * Necessário porque BaseEntity usa LocalDateTime, mas DTO espera OffsetDateTime
+     */
+    private OffsetDateTime convertLocalDateTimeToOffsetDateTime(LocalDateTime localDateTime) {
+        if (localDateTime == null) {
+            return null;
+        }
+        return localDateTime.atOffset(ZoneOffset.UTC);
     }
 }
