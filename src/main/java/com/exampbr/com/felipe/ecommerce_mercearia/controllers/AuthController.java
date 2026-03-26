@@ -16,7 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @Tag(name = "Authentication", description = "Endpoints para autenticação e autorização")
 public class AuthController {
 

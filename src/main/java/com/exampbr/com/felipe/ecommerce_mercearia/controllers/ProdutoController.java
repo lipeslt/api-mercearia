@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/produtos")
+@RequestMapping("/produtos")
 @Tag(name = "Produtos", description = "Endpoints para gerenciamento de produtos")
 public class ProdutoController {
 

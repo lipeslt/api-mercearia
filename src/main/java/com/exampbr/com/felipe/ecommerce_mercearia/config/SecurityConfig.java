@@ -29,40 +29,43 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // CORS Configuration
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
-
-                // CSRF Protection (desabilitado para API REST com JWT)
                 .csrf(csrf -> csrf.disable())
-
-                // Session Management (stateless para JWT)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // Authorization Rules
                 .authorizeHttpRequests(authz -> authz
-                        // Endpoints de autenticação - públicos
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
+                        // CORS preflight
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Swagger/OpenAPI - públicos
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers("/swagger-ui.html").permitAll()
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/swagger-resources/**").permitAll()
-                        .requestMatchers("/webjars/**").permitAll()
+                        // Auth - públicos
+                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/auth/**").permitAll()
 
-                        // Actuator Endpoints (Health, Metrics)
-                        .requestMatchers("/actuator/**").permitAll()
+                        // Catálogo - público
+                        .requestMatchers(HttpMethod.GET, "/categorias", "/categorias/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/produtos", "/produtos/**").permitAll()
 
-                        // Todos os outros endpoints requerem autenticação
+                        // Swagger / Actuator - públicos
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**",
+                                "/swagger-resources/**", "/webjars/**", "/actuator/**").permitAll()
+
+                        // Admin - apenas ADMIN
+                        .requestMatchers(HttpMethod.GET, "/usuarios", "/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/pedidos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/pedidos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/categorias").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/categorias/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/categorias/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/produtos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/produtos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/produtos/**").hasRole("ADMIN")
+
+                        // Demais endpoints - autenticado
                         .anyRequest().authenticated()
                 )
-
-                // Custom Security Filter (JWT Validation)
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
-
-                // Security Headers
                 .headers(headers -> headers
                         .frameOptions(frameOptions -> frameOptions.deny())
                         .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))

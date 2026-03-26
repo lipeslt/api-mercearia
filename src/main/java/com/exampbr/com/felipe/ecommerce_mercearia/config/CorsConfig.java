@@ -20,6 +20,7 @@ public class CorsConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
                 "http://localhost:4200",
+                "http://localhost:5173",
                 "https://seu-dominio.com"
         ));
 
@@ -44,7 +45,7 @@ public class CorsConfig {
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/**", configuration);
 
         return source;
     }

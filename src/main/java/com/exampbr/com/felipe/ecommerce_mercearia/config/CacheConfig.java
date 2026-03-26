@@ -14,7 +14,10 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         return new ConcurrentMapCacheManager(
                 "produtos",
+                "produto",
+                "produtosPorCategoria",
                 "categorias",
+                "categoria",
                 "pedidos",
                 "usuarios"
         );

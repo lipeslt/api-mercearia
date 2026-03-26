@@ -7,11 +7,16 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,6 +35,18 @@ public class PedidoController {
                 .body(pedidoService.criarPedido(dto));
     }
 
+    @GetMapping
+    @Operation(summary = "Listar todos os pedidos (Admin)")
+    public ResponseEntity<Page<Pedido>> listarTodos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "dataCriacao") String sortBy,
+            @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        return ResponseEntity.ok(pedidoService.listarTodos(pageable, status));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Obter pedido por ID")
     public ResponseEntity<Pedido> obterPedido(@PathVariable UUID id) {
@@ -43,6 +60,14 @@ public class PedidoController {
     public ResponseEntity<List<Pedido>> obterPedidosUsuario(@PathVariable UUID usuarioId) {
         List<Pedido> pedidos = pedidoService.obterPedidosPorUsuario(usuarioId);
         return ResponseEntity.ok(pedidos);
+    }
+
+    @PutMapping("/{id}/status")
+    @Operation(summary = "Atualizar status de um pedido (Admin)")
+    public ResponseEntity<Pedido> atualizarStatus(
+            @PathVariable UUID id,
+            @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(pedidoService.atualizarStatus(id, body.get("status")));
     }
 
     @DeleteMapping("/{id}")

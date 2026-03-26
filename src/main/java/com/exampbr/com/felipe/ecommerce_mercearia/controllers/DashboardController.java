@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.math.BigDecimal;
 
 @RestController
-@RequestMapping("/api/dashboard")
+@RequestMapping("/dashboard")
 @Tag(name = "Dashboard", description = "Endpoints para obter resumo do dashboard")
 public class DashboardController {
 
