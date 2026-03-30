@@ -19,13 +19,9 @@ import java.util.Map;
 public class MercadoPagoClient {
 
     private static final String BASE_URL = "https://api.mercadopago.com";
-    private static final String SANDBOX_URL = "https://sandbox.mercadopago.com";
 
     @Value("${mercadopago.access-token}")
     private String accessToken;
-
-    @Value("${mercadopago.environment:production}")
-    private String environment;
 
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient = HttpClient.newHttpClient();
@@ -72,6 +68,6 @@ public class MercadoPagoClient {
     }
 
     private String getBaseUrl() {
-        return "sandbox".equalsIgnoreCase(environment) ? SANDBOX_URL : BASE_URL;
+        return BASE_URL;
     }
 }

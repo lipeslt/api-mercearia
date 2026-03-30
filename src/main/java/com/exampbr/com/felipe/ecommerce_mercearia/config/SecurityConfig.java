@@ -46,6 +46,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/categorias", "/categorias/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/produtos", "/produtos/**").permitAll()
 
+                        // Webhook Mercado Pago - público
+                        .requestMatchers(HttpMethod.POST, "/payments/webhook").permitAll()
+
                         // Swagger / Actuator - públicos
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**",
                                 "/swagger-resources/**", "/webjars/**", "/actuator/**").permitAll()

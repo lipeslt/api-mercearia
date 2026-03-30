@@ -37,7 +37,7 @@ public class SecurityFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }
             }
-        } catch (JWTVerificationException e) {
+        } catch (Exception e) {
             logger.error("JWT Verification failed: " + e.getMessage());
         }
 

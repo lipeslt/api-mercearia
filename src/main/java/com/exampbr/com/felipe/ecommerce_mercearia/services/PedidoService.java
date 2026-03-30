@@ -10,7 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,9 +34,13 @@ public class PedidoService {
         }
         Pedido pedido = new Pedido();
         pedido.setUsuario(usuarioOpt.get());
+        pedido.setDataCriacao(OffsetDateTime.now());
+        pedido.setStatus(Pedido.StatusPedido.AGUARDANDO_PAGAMENTO);
+        pedido.setValorTotal(dto.valorTotal() != null ? dto.valorTotal() : BigDecimal.ZERO);
         return pedidoRepository.save(pedido);
     }
 
+    @Transactional(readOnly = true)
     public Page<Pedido> listarTodos(Pageable pageable, String status) {
         if (status != null && !status.isBlank()) {
             Pedido.StatusPedido statusEnum = Pedido.StatusPedido.valueOf(status.toUpperCase());
@@ -42,10 +49,12 @@ public class PedidoService {
         return pedidoRepository.findAll(pageable);
     }
 
+    @Transactional(readOnly = true)
     public Optional<Pedido> obterPedidoPorId(UUID id) {
-        return pedidoRepository.findById(id);
+        return pedidoRepository.findWithDetailsById(id);
     }
 
+    @Transactional(readOnly = true)
     public List<Pedido> obterPedidosPorUsuario(UUID usuarioId) {
         return pedidoRepository.findByUsuarioId(usuarioId);
     }

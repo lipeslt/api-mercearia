@@ -16,7 +16,6 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Configurar origens permitidas (ajustar para produção)
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
                 "http://localhost:4200",
@@ -24,13 +23,10 @@ public class CorsConfig {
                 "https://seu-dominio.com"
         ));
 
-        // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        // Headers permitidos
         configuration.setAllowedHeaders(Arrays.asList("*"));
 
-        // Headers expostos ao cliente
         configuration.setExposedHeaders(Arrays.asList(
                 "Authorization",
                 "Content-Type",
@@ -38,10 +34,8 @@ public class CorsConfig {
                 "X-Page-Number"
         ));
 
-        // Permitir credenciais (cookies, headers de auth)
         configuration.setAllowCredentials(true);
 
-        // Tempo máximo de cache da preflight request (em segundos)
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
